@@ -38,7 +38,7 @@ When reviewing agent work or validating a PR, I enforce `.github/PR_REQUIREMENTS
 2. **Exports map check**: Run `node scripts/check-exports-map.mjs`. If any barrel directories (`src/*/index.ts`) lack matching `package.json` export entries, block until fixed.
 3. **Build validation**: Run `npm run build` — must exit 0.
 4. **Test validation**: Run `npm test` — must exit 0.
-5. **Bleed check**: Compare staged files against the issue scope. Flag any files that don't relate to the stated goal.
+5. **Bleed check**: Compare staged files against the issue scope. Flag any files outside the `packages/` directory relevant to the linked issue. Heuristic: if the issue is about SDK, only `packages/squad-sdk/` changes are expected; CLI-only issues should not touch SDK source. Files outside the expected scope require justification in the PR description.
 
 ### PR Description Validation (run when opening or reviewing a PR)
 
@@ -61,6 +61,8 @@ User-facing changes trigger additional requirements:
 - Sample update if API changed (category f)
 
 ### How to Run the Full Check
+
+> **Note:** These are reference commands for local validation. FIDO uses these as a checklist during review — the agent inspects staged files and PR metadata rather than literally shelling out.
 
 ```bash
 # 1. Exports map

@@ -39,7 +39,7 @@ flowchart LR
     P2[🧪 test\nbuild + test\n+ canary + deletion guard]
     P3[📋 changelog-gate\nSDK/CLI change?\nCHANGELOG updated?]
     P4[📦 exports-map-check\nnew barrel?\nexport in package.json?]
-    P5["🎨 samples-build (planned)\nbuild all 11 samples\nagainst PR code\ntracked in #103"]
+    P5["🎨 samples-build ⏳\nbuild all 9 samples\nagainst PR code\nPR #674 pending"]
     P6[🚫 publish-policy\nnpm publish\nworkspace-scoped?]
 
     P1 & P2 & P3 & P4 & P5 & P6 --> R{All pass?}
@@ -262,13 +262,13 @@ The AI reviewer reads the code diff and leaves suggestions. Dina's workflow with
 | **`🔒 Large deletion guard`** | Blocks PRs that delete >50 files (unless `large-deletion-approved` label) |
 | **`publish-policy`** | All `npm publish` commands must use workspace flag (`-w`) |
 
-### 🆕 Added by Dina:
+### 🆕 Added by Dina (PR #673 — pending merge):
 
 | CI Job | What It Checks | PR |
 |--------|---------------|-----|
-| **`changelog-gate`** | If you change SDK/CLI source, you MUST update CHANGELOG.md | #673 |
-| **`exports-map-check`** | New `src/*/index.ts` barrels must have matching `package.json` exports | #673 |
-| **`samples-build`** | Planned: builds all 11 sample projects against your PR's SDK code (not yet active) | #103 (planned) |
+| **`changelog-gate`** | If you change SDK/CLI source, you MUST update CHANGELOG.md | #673 (⏳ pending merge) |
+| **`exports-map-check`** | New `src/*/index.ts` barrels must have matching `package.json` exports | #673 (⏳ pending merge) |
+| **`samples-build`** | Builds all 9 sample projects against your PR's SDK code | #674 (⏳ pending merge) |
 
 ---
 
