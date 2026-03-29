@@ -5,12 +5,98 @@
  * The .agent.md file is the *reference* document; SquadConfig is the
  * *runtime* source of truth.  This module bridges the two.
  *
+ * Also handles team roster synchronisation — ensuring the roster embedded
+ * in squad.agent.md stays in sync with .squad/team.md (see #83).
+ *
  * @module config/doc-sync
  */
 
 import type { AgentDocMetadata } from './agent-doc.js';
 import type { SquadConfig, AgentConfig } from './schema.js';
 import { normalizeEol } from '../utils/normalize-eol.js';
+
+// ---------------------------------------------------------------------------
+// Roster sync  (#83)
+// ---------------------------------------------------------------------------
+
+/** Minimal member info needed for roster generation. */
+export interface RosterMember {
+  name: string;
+  role: string;
+}
+
+const ROSTER_START = '<!-- SQUAD:ROSTER_START -->';
+const ROSTER_END = '<!-- SQUAD:ROSTER_END -->';
+
+/**
+ * Build a markdown roster block from a list of team members.
+ *
+ * The block is wrapped in HTML comment markers so it can be located
+ * and replaced on subsequent syncs.
+ */
+export function buildRosterBlock(members: readonly RosterMember[]): string {
+  const lines: string[] = [
+    ROSTER_START,
+    '### Current Team Roster',
+    '',
+    '| Name | Role | Charter |',
+    '|------|------|---------|',
+  ];
+  for (const m of members) {
+    const nameLower = m.name.toLowerCase();
+    lines.push(
+      `| ${m.name} | ${m.role} | \`.squad/agents/${nameLower}/charter.md\` |`,
+    );
+  }
+  lines.push(ROSTER_END);
+  return lines.join('\n');
+}
+
+/**
+ * Insert or replace the team roster block inside an agent doc.
+ *
+ * If the doc already contains `<!-- SQUAD:ROSTER_START -->` …
+ * `<!-- SQUAD:ROSTER_END -->` markers, the content between them is
+ * replaced.  Otherwise the roster is inserted before the first `---`
+ * horizontal rule (which separates the header from mode sections in
+ * the standard template), or appended at the end as a fallback.
+ *
+ * @param docContent - Current markdown content of the agent doc
+ * @param members    - Team members to render
+ * @returns Updated markdown with the roster block
+ */
+export function syncRosterToAgentDoc(
+  docContent: string,
+  members: readonly RosterMember[],
+): string {
+  const rosterBlock = buildRosterBlock(members);
+
+  const startIdx = docContent.indexOf(ROSTER_START);
+  const endIdx = docContent.indexOf(ROSTER_END);
+
+  if (startIdx !== -1 && endIdx !== -1) {
+    return (
+      docContent.slice(0, startIdx) +
+      rosterBlock +
+      docContent.slice(endIdx + ROSTER_END.length)
+    );
+  }
+
+  // No markers yet — insert before the first horizontal rule
+  const hrIdx = docContent.indexOf('\n---\n');
+  if (hrIdx !== -1) {
+    return (
+      docContent.slice(0, hrIdx) +
+      '\n\n' +
+      rosterBlock +
+      '\n' +
+      docContent.slice(hrIdx)
+    );
+  }
+
+  // Fallback: append
+  return docContent.trimEnd() + '\n\n' + rosterBlock + '\n';
+}
 
 /**
  * A single mismatch between the agent doc and the typed config.

@@ -25,6 +25,10 @@ Check: Does `.squad/team.md` exist? (fall back to `.ai-team/team.md` for repos m
 - **Yes, but `## Members` has zero roster entries** → Init Mode (treat as unconfigured — scaffold exists but no team was cast)
 - **Yes, with roster entries** → Team Mode
 
+<!-- SQUAD:ROSTER_START -->
+_Roster will be populated when the team is cast._
+<!-- SQUAD:ROSTER_END -->
+
 ---
 
 ## Init Mode — Phase 1: Propose the Team

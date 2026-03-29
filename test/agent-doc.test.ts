@@ -11,7 +11,10 @@ import {
   syncDocToConfig,
   syncConfigToDoc,
   detectDrift,
+  buildRosterBlock,
+  syncRosterToAgentDoc,
   type DriftReport,
+  type RosterMember,
 } from '@bradygaster/squad-sdk/config';
 import { defineConfig, type SquadConfig } from '@bradygaster/squad-sdk/config';
 
@@ -392,5 +395,151 @@ describe('detectDrift', () => {
     const config = makeConfig();
     const report = detectDrift(doc, config);
     expect(report.inSync).toBe(true);
+  });
+});
+
+// ============================================================================
+// buildRosterBlock  (#83)
+// ============================================================================
+
+describe('buildRosterBlock', () => {
+  const members: RosterMember[] = [
+    { name: 'Control', role: 'TypeScript Engineer' },
+    { name: 'Eecom', role: 'Runtime Engineer' },
+    { name: 'Scribe', role: 'Session Logger' },
+  ];
+
+  it('should produce a markdown table with correct headers', () => {
+    const block = buildRosterBlock(members);
+    expect(block).toContain('| Name | Role | Charter |');
+    expect(block).toContain('|------|------|---------|');
+  });
+
+  it('should include all members with charter paths', () => {
+    const block = buildRosterBlock(members);
+    expect(block).toContain('| Control | TypeScript Engineer | `.squad/agents/control/charter.md` |');
+    expect(block).toContain('| Eecom | Runtime Engineer | `.squad/agents/eecom/charter.md` |');
+    expect(block).toContain('| Scribe | Session Logger | `.squad/agents/scribe/charter.md` |');
+  });
+
+  it('should wrap output in roster markers', () => {
+    const block = buildRosterBlock(members);
+    expect(block).toMatch(/^<!-- SQUAD:ROSTER_START -->/);
+    expect(block).toMatch(/<!-- SQUAD:ROSTER_END -->$/);
+  });
+
+  it('should contain a heading', () => {
+    const block = buildRosterBlock(members);
+    expect(block).toContain('### Current Team Roster');
+  });
+
+  it('should handle an empty members list', () => {
+    const block = buildRosterBlock([]);
+    expect(block).toContain('<!-- SQUAD:ROSTER_START -->');
+    expect(block).toContain('<!-- SQUAD:ROSTER_END -->');
+    expect(block).toContain('| Name | Role | Charter |');
+  });
+});
+
+// ============================================================================
+// syncRosterToAgentDoc  (#83)
+// ============================================================================
+
+describe('syncRosterToAgentDoc', () => {
+  const members: RosterMember[] = [
+    { name: 'Alpha', role: 'Lead' },
+    { name: 'Beta', role: 'Dev' },
+  ];
+
+  it('should replace content between existing markers', () => {
+    const doc = [
+      '# Squad',
+      '',
+      '<!-- SQUAD:ROSTER_START -->',
+      '_old roster_',
+      '<!-- SQUAD:ROSTER_END -->',
+      '',
+      '---',
+      '',
+      '## Team Mode',
+    ].join('\n');
+
+    const result = syncRosterToAgentDoc(doc, members);
+    expect(result).toContain('| Alpha | Lead |');
+    expect(result).toContain('| Beta | Dev |');
+    expect(result).not.toContain('_old roster_');
+    expect(result).toContain('## Team Mode');
+  });
+
+  it('should insert before first --- when no markers exist', () => {
+    const doc = [
+      '# Squad',
+      '',
+      'Some preamble',
+      '',
+      '---',
+      '',
+      '## Init Mode',
+    ].join('\n');
+
+    const result = syncRosterToAgentDoc(doc, members);
+    expect(result).toContain('| Alpha | Lead |');
+    expect(result).toContain('<!-- SQUAD:ROSTER_START -->');
+    // Roster should appear before the ---
+    const rosterIdx = result.indexOf('<!-- SQUAD:ROSTER_START -->');
+    const hrIdx = result.indexOf('\n---\n');
+    expect(rosterIdx).toBeLessThan(hrIdx);
+    expect(result).toContain('## Init Mode');
+  });
+
+  it('should append if no markers and no --- exist', () => {
+    const doc = '# Squad\n\nJust a heading.';
+    const result = syncRosterToAgentDoc(doc, members);
+    expect(result).toContain('| Alpha | Lead |');
+    expect(result).toContain('<!-- SQUAD:ROSTER_END -->');
+  });
+
+  it('should not duplicate markers on repeated syncs', () => {
+    const doc = [
+      '# Squad',
+      '',
+      '<!-- SQUAD:ROSTER_START -->',
+      '_placeholder_',
+      '<!-- SQUAD:ROSTER_END -->',
+      '',
+      '---',
+    ].join('\n');
+
+    const first = syncRosterToAgentDoc(doc, members);
+    const second = syncRosterToAgentDoc(first, [
+      ...members,
+      { name: 'Gamma', role: 'QA' },
+    ]);
+
+    const startCount = (second.match(/<!-- SQUAD:ROSTER_START -->/g) ?? []).length;
+    const endCount = (second.match(/<!-- SQUAD:ROSTER_END -->/g) ?? []).length;
+    expect(startCount).toBe(1);
+    expect(endCount).toBe(1);
+    expect(second).toContain('| Gamma | QA |');
+    expect(second).toContain('| Alpha | Lead |');
+  });
+
+  it('should preserve content before and after the roster', () => {
+    const doc = [
+      '# Squad',
+      '',
+      '<!-- SQUAD:ROSTER_START -->',
+      '_old_',
+      '<!-- SQUAD:ROSTER_END -->',
+      '',
+      '## Team Mode',
+      '',
+      'Important content here.',
+    ].join('\n');
+
+    const result = syncRosterToAgentDoc(doc, members);
+    expect(result).toContain('# Squad');
+    expect(result).toContain('## Team Mode');
+    expect(result).toContain('Important content here.');
   });
 });
