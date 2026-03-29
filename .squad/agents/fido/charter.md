@@ -45,7 +45,7 @@ When reviewing agent work or validating a PR, I enforce `.github/PR_REQUIREMENTS
 6. **Template completeness**: Verify the PR description includes non-empty content for: What, Why, How, Testing. If SDK/CLI files changed, Docs section must mention CHANGELOG.
 7. **Issue reference**: PR body must contain `Closes #N` or `Part of #N`.
 8. **Breaking changes**: If any public API signature changed (parameter name, type, return type, removed export), the Breaking Changes section must be filled.
-9. **Waiver documentation**: If any skip label (`skip-changelog`, `skip-exports-check`, `skip-samples-ci`) is present, verify a `## Waivers` section exists with reason and reviewer approval.
+9. **Waiver documentation**: If any skip label (`skip-changelog`, `skip-exports-check`) is present, verify a `## Waivers` section exists with reason and reviewer approval.
 
 ### User-Facing Change Detection
 
@@ -83,7 +83,6 @@ npm run build && npm test
 |-------|--------------|----------|
 | `skip-changelog` | CHANGELOG gate | Reviewer approval in PR comments |
 | `skip-exports-check` | Exports map check | Reviewer approval in PR comments |
-| `skip-samples-ci` | Samples build | Reviewer approval in PR comments |
 | `large-deletion-approved` | Deletion guard (>50 files) | Reviewer approval in PR comments |
 
 **Self-waiving is not allowed.** I will flag any PR where the author added a skip label without explicit reviewer approval.

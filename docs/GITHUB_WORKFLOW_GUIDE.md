@@ -39,7 +39,7 @@ flowchart LR
     P2[🧪 test\nbuild + test\n+ canary + deletion guard]
     P3[📋 changelog-gate\nSDK/CLI change?\nCHANGELOG updated?]
     P4[📦 exports-map-check\nnew barrel?\nexport in package.json?]
-    P5[🎨 samples-build\nbuild all 11 samples\nagainst PR code]
+    P5["🎨 samples-build (planned)\nbuild all 11 samples\nagainst PR code\ntracked in #103"]
     P6[🚫 publish-policy\nnpm publish\nworkspace-scoped?]
 
     P1 & P2 & P3 & P4 & P5 & P6 --> R{All pass?}
@@ -118,12 +118,12 @@ flowchart TD
     
     LABEL --> L1[skip-changelog]
     LABEL --> L2[skip-exports-check]
-    LABEL --> L3[skip-samples-ci]
+    LABEL --> L3[skip-samples-ci\n(planned — #103)]
     LABEL --> L4[large-deletion-approved]
     
     FLAG --> F1[SQUAD_CHANGELOG_CHECK]
     FLAG --> F2[SQUAD_EXPORTS_CHECK]
-    FLAG --> F3[SQUAD_SAMPLES_CI]
+    FLAG --> F3["SQUAD_SAMPLES_CI\n(planned — #103)"]
     
     L1 & L2 & L3 & L4 --> RULE[⚠️ Rule: Self-waiving\nnot allowed — another\nreviewer must agree]
     F1 & F2 & F3 --> OWNER[🔒 Only repo owner\nBrady can change]
@@ -256,7 +256,7 @@ The AI reviewer reads the code diff and leaves suggestions. Dina's workflow with
 
 | CI Job | What It Checks |
 |--------|---------------|
-| **`docs-quality`** | Markdown formatting (`markdownlint`) + spell check (`cspell`) on docs |
+| **`docs-quality`** | Markdown formatting (`markdownlint`) + spell check (`cspell`) on `docs/src/content/**/*.md` and `README.md` |
 | **`test`** | `npm install` → `npm run build` → `npm test` |
 | **`🔒 Source tree canary`** | Verifies 4 critical files still exist (catches accidental deletion) |
 | **`🔒 Large deletion guard`** | Blocks PRs that delete >50 files (unless `large-deletion-approved` label) |
@@ -268,7 +268,7 @@ The AI reviewer reads the code diff and leaves suggestions. Dina's workflow with
 |--------|---------------|-----|
 | **`changelog-gate`** | If you change SDK/CLI source, you MUST update CHANGELOG.md | #673 |
 | **`exports-map-check`** | New `src/*/index.ts` barrels must have matching `package.json` exports | #673 |
-| **`samples-build`** | Builds all 11 sample projects against your PR's SDK code | #674 |
+| **`samples-build`** | Planned: builds all 11 sample projects against your PR's SDK code (not yet active) | #103 (planned) |
 
 ---
 
@@ -280,7 +280,7 @@ These are **repo variables** set in GitHub Settings. Only Brady can change them.
 |----------|---------|---------|----------------------------|
 | `SQUAD_CHANGELOG_CHECK` | CHANGELOG gate | ✅ On | Skips CHANGELOG requirement globally |
 | `SQUAD_EXPORTS_CHECK` | Exports map check | ✅ On | Skips exports check globally |
-| `SQUAD_SAMPLES_CI` | Samples build | ✅ On | Skips sample validation globally |
+| `SQUAD_SAMPLES_CI` | Samples build (planned — #103) | N/A | Future flag; safe to ignore for now |
 
 **How they work**: If the variable doesn't exist → check is ON. You must explicitly set it to `"false"` to disable.
 
@@ -294,7 +294,7 @@ These are **repo variables** set in GitHub Settings. Only Brady can change them.
 |-------|-------|-------------|
 | `skip-changelog` | CHANGELOG gate | CI/infra-only changes that don't need a changelog entry |
 | `skip-exports-check` | Exports map check | Missing export is intentional or tracked separately |
-| `skip-samples-ci` | Samples build | Sample updates coming in a follow-up PR |
+| `skip-samples-ci` | Samples build (planned — #103) | Not yet active; reserved for when samples CI gate ships |
 | `large-deletion-approved` | Deletion guard (>50 files) | Intentional mass refactors or migrations |
 
 ⚠️ **Rule: Self-waiving is not allowed.** Another reviewer must agree before you add a skip label.
@@ -504,7 +504,7 @@ This is a **monorepo** with two packages:
 | Publish policy | npm publish must be workspace-scoped | CI (automated) |
 | CHANGELOG gate | SDK/CLI changes need changelog | CI (automated) |
 | Exports map check | New modules need package.json exports | CI (automated) |
-| Samples build | SDK changes can't break samples | CI (automated) |
+| Samples build | SDK changes can't break samples | CI (planned — #103) |
 | Label enforcement | One label per namespace | Workflow (automated) |
 | Auto-triage | Issues routed by keywords | Workflow (automated) |
 | Copilot Code Review | AI reviews every PR | Bot (automated) |

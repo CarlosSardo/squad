@@ -76,8 +76,8 @@ If you changed files in `packages/squad-sdk/src/` or `packages/squad-cli/src/`, 
 ### 2. Exports map check
 Run `node scripts/check-exports-map.mjs` before pushing. If you added a new `src/*/index.ts` barrel directory, it must have a matching entry in `packages/squad-sdk/package.json` exports. CI will block if missing. Bypass: `skip-exports-check` label (requires reviewer approval).
 
-### 3. Samples build
-If you changed SDK source files, all 11 sample projects will be built against your changes in CI. Run `npm run build` in any affected sample directory to catch issues early. Bypass: `skip-samples-ci` label (requires reviewer approval).
+### 3. Samples build (manual until #103 ships)
+If you changed SDK source files, verify your changes don't break sample projects by running `npm run build` in any affected sample directory. A CI gate (`samples-build`) is planned in #103 but not yet active — this is a manual pre-push check for now.
 
 ### 4. PR description completeness
 Fill in all sections of the PR template (What, Why, How, Testing). If your changes are user-facing (SDK exports or CLI commands), the Docs section must include a CHANGELOG entry reference. Empty template sections will be flagged during review.
