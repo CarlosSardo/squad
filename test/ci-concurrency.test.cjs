@@ -24,6 +24,19 @@ const CONCURRENCY_REQUIRED_WORKFLOWS = [
   'squad-issue-assign.yml',
 ];
 
+// Issue-triggered workflows must use github.event.issue.number for unique concurrency groups
+const ISSUE_TRIGGERED_WORKFLOWS = [
+  'squad-heartbeat.yml',
+  'squad-triage.yml',
+  'squad-label-enforce.yml',
+  'squad-issue-assign.yml',
+];
+
+// PR-triggered workflows use github.ref (unique per PR)
+const PR_TRIGGERED_WORKFLOWS = [
+  'squad-ci.yml',
+];
+
 // All 3 locations where workflows are maintained
 const WORKFLOW_LOCATIONS = [
   { label: '.github/workflows (active)', dir: path.join(REPO_ROOT, '.github', 'workflows') },
@@ -57,8 +70,8 @@ describe('CI Hardening A1: Concurrency controls on workflows', () => {
           const content = readWorkflow(location.dir, workflow);
           if (!content) return;
           assert.ok(
-            content.includes("github.workflow") && content.includes("github.ref"),
-            `${workflow} concurrency group must use github.workflow and github.ref`
+            content.includes("github.workflow") && (content.includes("github.event.issue.number") || content.includes("github.ref")),
+            `${workflow} concurrency group must use github.workflow and a unique identifier (issue number or ref)`
           );
         });
 
@@ -73,4 +86,36 @@ describe('CI Hardening A1: Concurrency controls on workflows', () => {
       }
     });
   }
+
+  // Semantic validation: issue-triggered workflows must use issue-specific concurrency groups
+  describe('Semantic: issue-triggered workflows use issue-specific concurrency', () => {
+    for (const location of WORKFLOW_LOCATIONS) {
+      for (const workflow of ISSUE_TRIGGERED_WORKFLOWS) {
+        it(`${workflow} in ${location.label} uses github.event.issue.number`, () => {
+          const content = readWorkflow(location.dir, workflow);
+          if (!content) return;
+          assert.ok(
+            content.includes("github.event.issue.number"),
+            `${workflow} in ${location.label} must use github.event.issue.number for issue-specific concurrency (github.ref is always default branch for issue events)`
+          );
+        });
+      }
+    }
+  });
+
+  // Semantic validation: PR-triggered workflows must NOT use issue number
+  describe('Semantic: PR-triggered workflows use ref-based concurrency', () => {
+    for (const location of WORKFLOW_LOCATIONS) {
+      for (const workflow of PR_TRIGGERED_WORKFLOWS) {
+        it(`${workflow} in ${location.label} does not use github.event.issue.number`, () => {
+          const content = readWorkflow(location.dir, workflow);
+          if (!content) return;
+          assert.ok(
+            !content.includes("github.event.issue.number"),
+            `${workflow} in ${location.label} must NOT use github.event.issue.number (PR refs are already unique)`
+          );
+        });
+      }
+    }
+  });
 });
