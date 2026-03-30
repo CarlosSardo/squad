@@ -325,6 +325,16 @@ async function main(): Promise<void> {
     const intervalMinutes = (intervalIdx !== -1 && args[intervalIdx + 1])
       ? parseInt(args[intervalIdx + 1]!, 10)
       : 10;
+
+    // Detect extra args that look like a message (user may expect agent routing)
+    const knownFlags = new Set(['triage', 'watch', '--interval', String(intervalMinutes)]);
+    const extraArgs = args.filter(a => !knownFlags.has(a));
+    if (extraArgs.length > 0) {
+      const message = extraArgs.join(' ');
+      console.warn(`\n⚠️  Watch mode does not route messages to agents. Ignoring: "${message}"`);
+      console.warn(`   To address an agent directly, use an interactive session instead.\n`);
+    }
+
     await runWatch(process.cwd(), intervalMinutes);
     return;
   }
