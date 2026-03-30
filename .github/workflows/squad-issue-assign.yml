@@ -16,6 +16,23 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # CI Hardening: GitHub API rate limit monitoring (item 9)
+      # Issue assignment makes multiple API calls (read team file, add labels, comment, assign).
+      - name: "📊 Check GitHub API rate limit"
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { data: rateLimit } = await github.rest.rateLimit.get();
+            const { remaining, limit, reset } = rateLimit.rate;
+            const resetDate = new Date(reset * 1000).toISOString();
+            core.info(`GitHub API rate limit: ${remaining}/${limit} (resets ${resetDate})`);
+            if (remaining < 100) {
+              core.warning(`⚠️ Rate limit low: ${remaining}/${limit} remaining. Resets at ${resetDate}`);
+            }
+            if (remaining < 10) {
+              core.setFailed(`❌ Rate limit critically low: ${remaining}/${limit}. Aborting to prevent silent failures.`);
+            }
+
       - name: Identify assigned member and trigger work
         uses: actions/github-script@v7
         with:
