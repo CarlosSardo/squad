@@ -21,6 +21,11 @@ permissions:
   contents: read
   pull-requests: read
 
+# CI Hardening Phase 3 item A1: Prevent parallel runs from competing for resources
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   heartbeat:
     runs-on: ubuntu-latest
