@@ -37,7 +37,7 @@ squad init
 | `squad upgrade --migrate-directory` | Rename legacy `.ai-team/` directory to `.squad/` | Yes |
 | `squad link <team-repo-path>` | Link project to a remote team root | Yes |
 | `squad triage` | Auto-triage issues and assign to team (primary name; `watch` is an alias) | Yes |
-| `squad triage --interval <min>` | Continuous triage (default: every 10 min) | Yes |
+| `squad triage --interval <min>` | Continuous triage (default: every 10 min). **Note:** extra args (e.g., agent messages) are ignored — watch is a polling loop, not a message router | Yes |
 | `squad copilot` | Add the @copilot coding agent to the team | Yes |
 | `squad copilot --off` | Remove @copilot from the team | Yes |
 | `squad copilot --auto-assign` | Enable auto-assignment for @copilot | Yes |

@@ -204,6 +204,21 @@ This runs as a standalone local process (not inside Copilot) that:
 - Assigns @copilot to `squad:copilot` issues (if auto-assign is enabled)
 - Runs until Ctrl+C
 
+:::caution[Watch mode does not route messages]
+`squad watch` is a **triage polling loop**, not a message router. Extra arguments like agent names or messages are ignored:
+
+```bash
+# ❌ This does NOT route to Nick — the message is ignored
+squad watch --interval 5 "Nick, Run scheduled tasks"
+
+# ✅ To address an agent directly, use an interactive session:
+squad
+> Nick, Run scheduled tasks
+```
+
+To route work to a specific agent, create a GitHub issue with the appropriate `squad:{member}` label — `squad watch` will pick it up during the next poll cycle.
+:::
+
 ### Three layers of Ralph
 
 | Layer | When | How |
